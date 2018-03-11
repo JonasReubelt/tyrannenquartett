@@ -1,7 +1,7 @@
 #tyrannen quartett
 import sys
 import pygame
-import time
+import random
 
 pygame.init()
 
@@ -142,7 +142,10 @@ def calc_winner(category, ids):
 player_cards = ["A1"]
 ai_cards = ["B1"]
 
-card_ids = ["F3", "G1"]
+c = list(cards.keys())
+random.shuffle(c)
+
+card_ids = [c[0], c[1]]
 poss = ["left", "right"]
 
 covered = True
@@ -152,6 +155,8 @@ NO_MARK = (False, False, False)
 mark = NO_MARK
 
 clock = pygame.time.Clock()
+
+next_card = False
 
 while 1:
     screen.fill(WHITE)
@@ -171,6 +176,15 @@ while 1:
         if event.type == pygame.QUIT: 
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if next_card == True:
+                c = list(cards.keys())
+                random.shuffle(c)
+
+                card_ids = [c[0], c[1]]
+                mark = NO_MARK
+                next_card = False
+                covered = True
+                continue
             mouse_pos = pygame.mouse.get_pos()
             category = chosen_category(mouse_pos)
             if category not in categories:
@@ -183,6 +197,7 @@ while 1:
             else:
                 color = RED
             mark = (color, "left", category)
+            next_card = True
     
     
     
