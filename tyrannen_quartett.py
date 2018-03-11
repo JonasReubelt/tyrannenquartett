@@ -219,10 +219,45 @@ next_card = False
 
 whose_turn = "player"
 
+DIFFICULTIES = ["Anfänger", "Fortgeschrittener", "Profi", "Meister"]
+
+def draw_difficulties(difficulties):
+    for i, difficulty in enumerate(difficulties):
+        draw_frame(0, 
+                   float(i)/len(difficulties)*HEIGHT,
+                   WIDTH,
+                   HEIGHT/len(difficulties))
+        draw_text(5, float(i)/len(difficulties)*HEIGHT + 10, difficulty)
+
+def draw_difficulty(difficulty):
+    draw_text(5, 5, "Schwierigkeitsgrad: {}".format(difficulty))
+
+def choose_difficulty(difficulties, pos):
+    for i, difficulty in enumerate(difficulties):
+        if pos[1] > float(i)/len(difficulties)*HEIGHT and pos[1] < float(i+1)/len(difficulties)*HEIGHT:
+            return difficulty
+
+DIFFICULTY = False
+
+while 1:
+    screen.fill(WHITE)
+    draw_difficulties(DIFFICULTIES)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT: 
+            sys.exit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            DIFFICULTY = choose_difficulty(DIFFICULTIES, mouse_pos)
+    if DIFFICULTY:
+        break
+    pygame.display.flip()
+    clock.tick(30)      
+
 while 1:
     screen.fill(WHITE)
     draw_categories()
     draw_turn(whose_turn)
+    draw_difficulty(DIFFICULTY)
     card_ids = (player_cards[0], ai_cards[0])
     draw_number_of_cards(n_player_cards, n_ai_cards)
     #draw_turn(whose_turn)
