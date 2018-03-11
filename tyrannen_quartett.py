@@ -112,6 +112,20 @@ def draw_text(x, y, text):
     label = myfont.render(text, 1, BLACK)
     screen.blit(label, (x, y))
 
+def number_to_string(number):
+    if number < 10000:
+        return str(number)
+    else:
+        string = str(number)[::-1]
+        new_string = ""
+        for i, s in enumerate(string):
+            new_string += s
+            if i%3 == 2:
+                new_string += "."
+        if new_string[-1] == ".":
+            return new_string[::-1][1:]
+        return new_string[::-1]
+
 def draw_values(id, pos):
     for i, category in enumerate(categories):
         draw_frame(card_xs[pos],
@@ -120,7 +134,7 @@ def draw_values(id, pos):
                    FRAME_HEIGHT)
         draw_text(card_xs[pos] + TEXT_X_OFFSET,
                   TEXT_Y_START + i*FRAME_HEIGHT,
-                  str(cards[id][category]))
+                  number_to_string(cards[id][category]))
 
 
 
@@ -151,8 +165,7 @@ def ai_category(categories, card_values, ai_card):
         if category == "Alter bei Machtübernahme":
             scores.append(np.mean(card_values_cat > card_value))
         else:
-            scores.append(np.mean(card_values_cat < card_value))
-        
+            scores.append(np.mean(card_values_cat < card_value))   
     return categories[np.argmax(scores)]
 
 def mark_category(color, pos, category):
