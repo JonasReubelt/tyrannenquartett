@@ -5,7 +5,7 @@ import random
 
 pygame.init()
 
-SIZE = WIDTH, HEIGHT = 460, 270
+SIZE = WIDTH, HEIGHT = 800, 600
 
 WHITE = 255, 255, 255
 BLACK = 0, 0, 0
@@ -13,15 +13,18 @@ GRAY = 100, 100, 100
 GREEN = 0, 255, 0
 RED = 255, 0, 0
 
-FRAME_HEIGHT = 20
-FRAME_Y_START = 115
-CATEGORY_WIDTH = 120
-TEXT_Y_START = 120
+IMG_Y_START = 40
+
+FRAME_HEIGHT = 30
+FRAME_Y_START = 300
+CATEGORY_WIDTH = 200
+TEXT_Y_START = FRAME_Y_START + 5
 TEXT_X_OFFSET = 5
 NAME_Y = 90
+CARD_NUMBER_Y = 470
 
-IMG_PIX_X = 86
-IMG_PIX_Y = 79
+IMG_PIX_X = 179
+IMG_PIX_Y = 221
 
 CARD_X_LEFT = WIDTH - IMG_PIX_X * 2 - 70 - 60
 CARD_X_RIGHT = WIDTH - IMG_PIX_X - 60
@@ -67,20 +70,23 @@ card_x_positions = {"left": CARD_X_LEFT, "right": CARD_X_RIGHT}
 
 screen = pygame.display.set_mode(SIZE)
 
-myfont = pygame.font.SysFont("arial", 10)
+myfont = pygame.font.SysFont("arial", 16)
 label = myfont.render("Some text!", 1, (255,255,0))
 # render text
 label = myfont.render("Kaiser Wilhelm II.", 1, (0,0,0))
 
 def draw_blank():
-    rect = pygame.Rect(CARD_X_RIGHT, 0, IMG_PIX_X, IMG_PIX_Y)
+    rect = pygame.Rect(CARD_X_RIGHT, IMG_Y_START, IMG_PIX_X, IMG_PIX_Y)
     pygame.draw.rect(screen, GRAY, rect)
-    draw_frame(card_x_positions["right"], 0, IMG_PIX_X, IMG_PIX_Y)
+    draw_frame(card_x_positions["right"], IMG_Y_START, IMG_PIX_X, IMG_PIX_Y)
+
+#def draw_
 
 def draw_card(id, pos):
     imgage = pygame.image.load("images/{}.png".format(id))
-    screen.blit(imgage, (card_x_positions[pos], 0))
-    draw_frame(card_x_positions[pos], 0, IMG_PIX_X, IMG_PIX_Y)
+    screen.blit(imgage, (card_x_positions[pos], IMG_Y_START))
+    draw_frame(card_x_positions[pos], IMG_Y_START, IMG_PIX_X, IMG_PIX_Y)
+    
 
 def draw_name(id, pos):
     label = myfont.render(cards[id]["name"], 1, BLACK)
@@ -113,15 +119,15 @@ def draw_values(id, pos):
                   str(cards[id][category]))
 
 def draw_turn(whose_turn):
-    draw_text(200, 250, "{} turn".format(whose_turn))
+    draw_text(10, 10, "{} turn".format(whose_turn))
 
 def draw_number_of_cards(player_cards, ai_cards):
     draw_text(CARD_X_LEFT + TEXT_X_OFFSET,
-              230, 
-              "{} Tyrannen".format(player_cards))
+              5, 
+              "Spieler ({} Tyrannen)".format(player_cards))
     draw_text(CARD_X_RIGHT + TEXT_X_OFFSET,
-              230,
-              "{} Tyrannen".format(ai_cards))
+              5,
+              "AI ({} Tyrannen)".format(ai_cards))
 
 def chosen_category(mouse_pos):
     x = mouse_pos[0]
@@ -197,7 +203,7 @@ while 1:
     draw_categories()
     card_ids = (player_cards[0], ai_cards[0])
     draw_number_of_cards(n_player_cards, n_ai_cards)
-    draw_turn(whose_turn)
+    #draw_turn(whose_turn)
     if False not in mark:
         mark_category(*mark)
 
@@ -206,7 +212,7 @@ while 1:
             draw_blank()
             continue
         draw_card(card_id, pos)
-        draw_name(card_id, pos)
+        #draw_name(card_id, pos)
         draw_values(card_id, pos)
 
     for event in pygame.event.get():
