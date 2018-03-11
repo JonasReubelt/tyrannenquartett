@@ -5,7 +5,7 @@ import random
 
 pygame.init()
 
-SIZE = WIDTH, HEIGHT = 340, 220
+SIZE = WIDTH, HEIGHT = 460, 270
 
 WHITE = 255, 255, 255
 BLACK = 0, 0, 0
@@ -23,8 +23,8 @@ NAME_Y = 90
 IMG_PIX_X = 86
 IMG_PIX_Y = 79
 
-CARD_X_LEFT = WIDTH - IMG_PIX_X * 2 - 20
-CARD_X_RIGHT = WIDTH - IMG_PIX_X
+CARD_X_LEFT = WIDTH - IMG_PIX_X * 2 - 70 - 60
+CARD_X_RIGHT = WIDTH - IMG_PIX_X - 60
 
 card_xs = {"left": CARD_X_LEFT, "right": CARD_X_RIGHT}
 
@@ -112,6 +112,10 @@ def draw_values(id, pos):
                   TEXT_Y_START + i*FRAME_HEIGHT,
                   str(cards[id][category]))
 
+def draw_number_of_cards(player_cards, ai_cards):
+    draw_text(CARD_X_LEFT, 220, "{} Tyrannen".format(player_cards))
+    draw_text(CARD_X_RIGHT, 220, "{} Tyrannen".format(ai_cards))
+
 def chosen_category(mouse_pos):
     x = mouse_pos[0]
     y = mouse_pos[1]
@@ -134,18 +138,34 @@ def mark_category(color, pos, category):
     pygame.draw.rect(screen, color, rect)
 
 def calc_winner(category, ids):
-    if cards[ids[0]][category] > cards[ids[1]][category]:
-        return ids[0]
+    if category == "Alter bei Machtübernahme":
+        if cards[ids[0]][category] < cards[ids[1]][category]:
+            return ids[0]
+        else:
+            return ids[1]
     else:
-        return ids[1]
+        if cards[ids[0]][category] > cards[ids[1]][category]:
+            return ids[0]
+        else:
+            return ids[1]
 
-player_cards = ["A1"]
-ai_cards = ["B1"]
+def distribute_cards(cards):
+    card_list = list(cards.keys())
+    random.shuffle(card_list)
+    player_cards = card_list[:16]
+    ai_cards = card_list[16:]
+    return player_cards, ai_cards
+
+
+
+player_cards, ai_cards = distribute_cards(cards)
+
+n_player_cards = 16
+n_ai_cards = 16
 
 c = list(cards.keys())
 random.shuffle(c)
 
-card_ids = [c[0], c[1]]
 poss = ["left", "right"]
 
 covered = True
@@ -161,6 +181,8 @@ next_card = False
 while 1:
     screen.fill(WHITE)
     draw_categories()
+    card_ids = (player_cards[0], ai_cards[0])
+    draw_number_of_cards(n_player_cards, n_ai_cards)
     if False not in mark:
         mark_category(*mark)
 
@@ -177,10 +199,9 @@ while 1:
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if next_card == True:
-                c = list(cards.keys())
-                random.shuffle(c)
-
-                card_ids = [c[0], c[1]]
+                player_cards.pop(0)
+                ai_cards.pop(0)
+                card_ids = [player_cards[0], ai_cards[0]]
                 mark = NO_MARK
                 next_card = False
                 covered = True
@@ -191,13 +212,26 @@ while 1:
                 continue
             covered = False
             winner = calc_winner(category, card_ids)
+            
             print(category)
             if winner == card_ids[0]:
                 color = GREEN
+                player_cards.append(ai_cards[0])
+                player_cards.append(player_cards[0])
+                n_player_cards += 1
+                n_ai_cards -= 1
             else:
                 color = RED
+                ai_cards.append(player_cards[0])
+                ai_cards.append(ai_cards[0])
+                n_ai_cards += 1
+                n_player_cards -= 1
+
             mark = (color, "left", category)
             next_card = True
+            print(player_cards)
+            print(ai_cards)
+                
     
     
     
