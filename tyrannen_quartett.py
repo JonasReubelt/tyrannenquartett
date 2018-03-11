@@ -2,6 +2,8 @@
 import sys
 import pygame
 import random
+from collections import defaultdict
+import numpy as np
 
 pygame.init()
 
@@ -23,15 +25,13 @@ TEXT_X_OFFSET = 5
 NAME_Y = 90
 CARD_NUMBER_Y = 470
 
-IMG_PIX_X = 179
+IMG_PIX_X = 181
 IMG_PIX_Y = 221
 
 CARD_X_LEFT = WIDTH - IMG_PIX_X * 2 - 70 - 60
 CARD_X_RIGHT = WIDTH - IMG_PIX_X - 60
 
 card_xs = {"left": CARD_X_LEFT, "right": CARD_X_RIGHT}
-
-
 
 
 categories = ["Geburtsjahr", "Alter bei Machtübernahme", "Herrschaftsdauer",
@@ -52,20 +52,17 @@ def read_card_info(filename, categories):
     return cards
 
 cards = read_card_info("card_info.txt", categories)
-"""
-cards = {"a1": {"name": "Kaiser Wilhelm II.", 
-                "Geburtsjahr": 1859,
-                "Alter bei Machtübernahme": 29, 
-                "Herrschaftsdauer": 30, 
-                "Todesopfer": 9000000, 
-                "Privatvermögen (US $)": 10000000000}, 
-         "b1": {"name": "Adolf Hitler",
-                "Geburtsjahr": 1889,
-                "Alter bei Machtübernahme": 43,
-                "Herrschaftsdauer": 12,
-                "Todesopfer": 55000000,
-                "Privatvermögen (US $)": 3000000000}}
-"""
+
+def calc_card_values(cards, categories):
+    card_values = defaultdict(list)
+    for category in categories:
+        for card in cards.values():
+            card_values[category].append(card[category])
+    return card_values
+
+card_values = calc_card_values(cards, categories)
+
+
 card_x_positions = {"left": CARD_X_LEFT, "right": CARD_X_RIGHT}
 
 screen = pygame.display.set_mode(SIZE)
@@ -80,7 +77,14 @@ def draw_blank():
     pygame.draw.rect(screen, GRAY, rect)
     draw_frame(card_x_positions["right"], IMG_Y_START, IMG_PIX_X, IMG_PIX_Y)
 
-#def draw_
+def draw_turn(whose_turn):
+    if whose_turn == "player":
+        x = CARD_X_LEFT
+    else:
+        x = CARD_X_RIGHT
+
+    rect = pygame.Rect(x, 0, IMG_PIX_X, IMG_Y_START - 5)
+    pygame.draw.rect(screen, GREEN, rect)
 
 def draw_card(id, pos):
     imgage = pygame.image.load("images/{}.png".format(id))
@@ -118,8 +122,7 @@ def draw_values(id, pos):
                   TEXT_Y_START + i*FRAME_HEIGHT,
                   str(cards[id][category]))
 
-def draw_turn(whose_turn):
-    draw_text(10, 10, "{} turn".format(whose_turn))
+
 
 def draw_number_of_cards(player_cards, ai_cards):
     draw_text(CARD_X_LEFT + TEXT_X_OFFSET,
@@ -139,10 +142,18 @@ def chosen_category(mouse_pos):
                                                              + FRAME_HEIGHT):
                 return category
 
-def ai_category(categories):
-    c = categories[:]
-    random.shuffle(c)
-    return c[0]
+def ai_category(categories, card_values, ai_card):
+    card = cards[ai_card]
+    scores = []
+    for category in categories:
+        card_values_cat = np.array(card_values[category])
+        card_value = card[category]
+        if category == "Alter bei Machtübernahme":
+            scores.append(np.mean(card_values_cat > card_value))
+        else:
+            scores.append(np.mean(card_values_cat < card_value))
+        
+    return categories[np.argmax(scores)]
 
 def mark_category(color, pos, category):
     try:
@@ -175,14 +186,11 @@ def distribute_cards(cards):
     return player_cards, ai_cards
 
 
-
 player_cards, ai_cards = distribute_cards(cards)
 
 n_player_cards = 16
 n_ai_cards = 16
 
-c = list(cards.keys())
-random.shuffle(c)
 
 poss = ["left", "right"]
 
@@ -201,6 +209,7 @@ whose_turn = "player"
 while 1:
     screen.fill(WHITE)
     draw_categories()
+    draw_turn(whose_turn)
     card_ids = (player_cards[0], ai_cards[0])
     draw_number_of_cards(n_player_cards, n_ai_cards)
     #draw_turn(whose_turn)
@@ -227,32 +236,11 @@ while 1:
                 next_card = False
                 covered = True
                 continue
+
             if whose_turn == "ai":
-                category = ai_category(categories)
+                category = ai_category(categories, card_values, card_ids[1])
                 covered = False
                 winner = calc_winner(category, card_ids)
-                
-                #print(category)
-                if winner == card_ids[0]:
-                    color = GREEN
-                    player_cards.append(ai_cards[0])
-                    player_cards.append(player_cards[0])
-                    n_player_cards += 1
-                    n_ai_cards -= 1
-                    whose_turn = "player"
-                else:
-                    color = RED
-                    ai_cards.append(player_cards[0])
-                    ai_cards.append(ai_cards[0])
-                    n_ai_cards += 1
-                    n_player_cards -= 1
-                    whose_turn = "ai"
-
-                mark = (color, "left", category)
-                next_card = True
-                #print(player_cards)
-                #print(ai_cards)   
-                
             else:
                 mouse_pos = pygame.mouse.get_pos()
                 category = chosen_category(mouse_pos)
@@ -262,30 +250,26 @@ while 1:
                 winner = calc_winner(category, card_ids)
                 
                 #print(category)
-                if winner == card_ids[0]:
-                    color = GREEN
-                    player_cards.append(ai_cards[0])
-                    player_cards.append(player_cards[0])
-                    n_player_cards += 1
-                    n_ai_cards -= 1
-                    whose_turn = "player"
-                else:
-                    color = RED
-                    ai_cards.append(player_cards[0])
-                    ai_cards.append(ai_cards[0])
-                    n_ai_cards += 1
-                    n_player_cards -= 1
-                    whose_turn = "ai"
+            if winner == card_ids[0]:
+                color = GREEN
+                player_cards.append(ai_cards[0])
+                player_cards.append(player_cards[0])
+                n_player_cards += 1
+                n_ai_cards -= 1
+                whose_turn = "player"
+            else:
+                color = RED
+                ai_cards.append(player_cards[0])
+                ai_cards.append(ai_cards[0])
+                n_ai_cards += 1
+                n_player_cards -= 1
+                whose_turn = "ai"
 
-                mark = (color, "left", category)
-                next_card = True
-                print(player_cards)
-                print(ai_cards)
-                
-    
-    
-    
-    
-        
+            mark = (color, "left", category)
+            next_card = True
+            print(player_cards)
+            print(ai_cards)
+            
+  
     pygame.display.flip()
     clock.tick(30)
