@@ -112,9 +112,16 @@ def draw_values(id, pos):
                   TEXT_Y_START + i*FRAME_HEIGHT,
                   str(cards[id][category]))
 
+def draw_turn(whose_turn):
+    draw_text(200, 250, "{} turn".format(whose_turn))
+
 def draw_number_of_cards(player_cards, ai_cards):
-    draw_text(CARD_X_LEFT, 220, "{} Tyrannen".format(player_cards))
-    draw_text(CARD_X_RIGHT, 220, "{} Tyrannen".format(ai_cards))
+    draw_text(CARD_X_LEFT + TEXT_X_OFFSET,
+              230, 
+              "{} Tyrannen".format(player_cards))
+    draw_text(CARD_X_RIGHT + TEXT_X_OFFSET,
+              230,
+              "{} Tyrannen".format(ai_cards))
 
 def chosen_category(mouse_pos):
     x = mouse_pos[0]
@@ -125,6 +132,11 @@ def chosen_category(mouse_pos):
                                                              + i*FRAME_HEIGHT
                                                              + FRAME_HEIGHT):
                 return category
+
+def ai_category(categories):
+    c = categories[:]
+    random.shuffle(c)
+    return c[0]
 
 def mark_category(color, pos, category):
     try:
@@ -178,11 +190,14 @@ clock = pygame.time.Clock()
 
 next_card = False
 
+whose_turn = "player"
+
 while 1:
     screen.fill(WHITE)
     draw_categories()
     card_ids = (player_cards[0], ai_cards[0])
     draw_number_of_cards(n_player_cards, n_ai_cards)
+    draw_turn(whose_turn)
     if False not in mark:
         mark_category(*mark)
 
@@ -206,31 +221,60 @@ while 1:
                 next_card = False
                 covered = True
                 continue
-            mouse_pos = pygame.mouse.get_pos()
-            category = chosen_category(mouse_pos)
-            if category not in categories:
-                continue
-            covered = False
-            winner = calc_winner(category, card_ids)
-            
-            print(category)
-            if winner == card_ids[0]:
-                color = GREEN
-                player_cards.append(ai_cards[0])
-                player_cards.append(player_cards[0])
-                n_player_cards += 1
-                n_ai_cards -= 1
-            else:
-                color = RED
-                ai_cards.append(player_cards[0])
-                ai_cards.append(ai_cards[0])
-                n_ai_cards += 1
-                n_player_cards -= 1
+            if whose_turn == "ai":
+                category = ai_category(categories)
+                covered = False
+                winner = calc_winner(category, card_ids)
+                
+                #print(category)
+                if winner == card_ids[0]:
+                    color = GREEN
+                    player_cards.append(ai_cards[0])
+                    player_cards.append(player_cards[0])
+                    n_player_cards += 1
+                    n_ai_cards -= 1
+                    whose_turn = "player"
+                else:
+                    color = RED
+                    ai_cards.append(player_cards[0])
+                    ai_cards.append(ai_cards[0])
+                    n_ai_cards += 1
+                    n_player_cards -= 1
+                    whose_turn = "ai"
 
-            mark = (color, "left", category)
-            next_card = True
-            print(player_cards)
-            print(ai_cards)
+                mark = (color, "left", category)
+                next_card = True
+                #print(player_cards)
+                #print(ai_cards)   
+                
+            else:
+                mouse_pos = pygame.mouse.get_pos()
+                category = chosen_category(mouse_pos)
+                if category not in categories:
+                    continue
+                covered = False
+                winner = calc_winner(category, card_ids)
+                
+                #print(category)
+                if winner == card_ids[0]:
+                    color = GREEN
+                    player_cards.append(ai_cards[0])
+                    player_cards.append(player_cards[0])
+                    n_player_cards += 1
+                    n_ai_cards -= 1
+                    whose_turn = "player"
+                else:
+                    color = RED
+                    ai_cards.append(player_cards[0])
+                    ai_cards.append(ai_cards[0])
+                    n_ai_cards += 1
+                    n_player_cards -= 1
+                    whose_turn = "ai"
+
+                mark = (color, "left", category)
+                next_card = True
+                print(player_cards)
+                print(ai_cards)
                 
     
     
